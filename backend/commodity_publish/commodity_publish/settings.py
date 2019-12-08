@@ -25,8 +25,9 @@ SECRET_KEY = 'tg+8#8@g2b67)1qt!_gzszk#i3-c%#6fo70pr%imbf8^-rh_$k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+AUTH_USER_MODEL = "account.User"
 
 # Application definition
 
@@ -72,7 +73,10 @@ CORS_ALLOW_METHODS = (
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_PERMISSION_CLASSES':[
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 CORS_ALLOW_HEADERS = (

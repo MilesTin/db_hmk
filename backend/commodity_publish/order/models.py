@@ -1,7 +1,10 @@
 from django.db import models
 from rest_framework.serializers import *
 from account.models import User
-# Create your models here.
+import uuid
+import os
+
+
 class Commodity(models.Model):
     comId = models.BigAutoField(verbose_name="商品id", primary_key=True)
     name = models.CharField(verbose_name="商品名", max_length=100)
@@ -18,10 +21,61 @@ class Commodity(models.Model):
 
 
     def __str__(self):
-        return "商品 " + self.name +" : " + str(self.comId)
+        return  self.name +" : " + str(self.comId)
+
 
 class CommoditySerializer(ModelSerializer):
 
     class Meta:
         model = Commodity
         fields = "__all__"
+
+
+class Order(models.Model):
+    ORDERED = 0
+    AGREED = 1
+    status_choices = (
+        (ORDERED, "已经被预定"),
+        (AGREED, "预定已同意")
+    )
+
+    orderId = models.BigAutoField(verbose_name="订单id", primary_key=True)
+    status = models.IntegerField(verbose_name="状态", choices=status_choices, default=ORDERED)
+    appointment_time = models.DateTimeField(verbose_name="预约时间", auto_created=True)
+    finished_time = models.DateTimeField(verbose_name="结束时间", null=True)
+    stuId_buyer = models.ForeignKey(User, verbose_name="买家", on_delete=models.SET_NULL, null=True, related_name="buyer_orders")
+    stuId_seller = models.ForeignKey(User, verbose_name="卖家", on_delete=models.SET_NULL, null=True, related_name="seller_orders")
+
+    class Meta:
+        verbose_name = "订单"
+        verbose_name_plural = "订单"
+
+
+def user_directory_path(instance, filename):
+    ext = filename.split(".")[-1]
+    filename = '{}.{}'.format(uuid.uuid4().hex[:10], ext)
+
+    return os.path.join(instance.user.stuId, "com_pics", filename)
+
+
+class CommodityPics(models.Model):
+    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE)
+    pic = models.ImageField(verbose_name="图片", upload_to=user_directory_path)
+
+
+    class Meta:
+        verbose_name = "商品图片"
+        verbose_name_plural = "商品图片"
+        unique_together = ("comId", "pic")
+
+
+class CommodityType(models.Model):
+    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE)
+    type = models.CharField(verbose_name="类型", max_length=20)
+
+    class Meta:
+        verbose_name = "商品类型"
+        verbose_name_plural = "商品类型"
+        unique_together = ("comId", "type")
+
+
