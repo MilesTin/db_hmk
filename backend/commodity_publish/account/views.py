@@ -9,62 +9,64 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import *
-
+from rest_framework.authentication import authenticate
 from rest_framework.decorators import action
+
 # Create your views here.
 
 
+class IsOwner(permissions.IsAuthenticated):
 
+    def has_permission(self, request, view):
+        print(view.kwargs)
+        user = User.objects.get(pk=view.kwargs['pk'])
+        if request.user == user:
+            return True
 
-class UserDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.RetrieveModelMixin):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+        return False
 
-    def get(self, request, *args, **kwargs):
-
-        return self.retrieve(self, request, *args, **kwargs)
-
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-class UserList(generics.ListAPIView, mixins.CreateModelMixin):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
 
 
 #user视图集
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly | permissions.IsAuthenticatedOrReadOnly]
 
-    @action(detail=True, methods=['get', 'post', 'put', 'patch'], permission_classes=[permissions.IsAdminUser, permissions.IsAuthenticated])
+    @action(detail=True, methods=['get', 'post', 'put', 'patch'], permission_classes=[permissions.IsAdminUser | IsOwner])
     def info(self, request, pk=None):
-
         user = self.get_object()
-        serializer = UserSerializer(user)
+        serializer = self.get_serializer(user, data=request.data)
+        if serializer.is_valid(raise_exception=False):
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(self.get_serializer(user).data)
 
-        return Response(serializer.data)
+
 
     @action(detail=False, methods=['post'])
-    def login(self, request):
-        self.perform_authentication(request)
+    def login(self, request, pk=None):
+        stuId = request.data.get("stuId","")
+        password = request.data.get("password","")
+        user = authenticate(request, stuId=stuId, password=password)
 
-
-        if request.user:
-            user = self.get_object()
+        if user:
             serializer = self.get_serializer(user)
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            data = serializer.data
+            del data['password']
+            return Response(data, status=status.HTTP_200_OK)
         else:
             return Response({"msg":"wrong password"}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=False, methods=['post'])
+    def register(self, request, *args, **kwargs):
+        try:
+            self.create(self, request, *args, **kwargs)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 
