@@ -18,9 +18,11 @@ from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from account.views import *
 from rest_framework.urlpatterns import format_suffix_patterns
+from order.views import *
+
 router = DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
-
+router.register(r"commodity", CommodityViewSets, base_name="commodity")
 urlpatterns = router.urls
 urlpatterns += [
     re_path("admin/", admin.site.urls)
