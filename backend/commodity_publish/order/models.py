@@ -3,7 +3,7 @@ from rest_framework.serializers import *
 from account.models import User
 import uuid
 import os
-
+from account.models import UserSerializer
 
 class Commodity(models.Model):
     comId = models.BigAutoField(verbose_name="商品id", primary_key=True)
@@ -12,7 +12,7 @@ class Commodity(models.Model):
     price = models.DecimalField(verbose_name="价格",max_digits=20, decimal_places=10)
     description = models.TextField(verbose_name="描述", max_length=300)
 
-    stuId = models.ForeignKey(User, on_delete=models.SET_NULL, verbose_name="商品发布者", null=True)
+    stuId = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="商品发布者")
 
     class Meta:
         verbose_name = "商品"
@@ -24,11 +24,7 @@ class Commodity(models.Model):
         return  self.name +" : " + str(self.comId)
 
 
-class CommoditySerializer(ModelSerializer):
 
-    class Meta:
-        model = Commodity
-        fields = "__all__"
 
 
 class Order(models.Model):
@@ -77,5 +73,26 @@ class CommodityType(models.Model):
         verbose_name = "商品类型"
         verbose_name_plural = "商品类型"
         unique_together = ("comId", "type")
+
+
+class CommoditySerializer(ModelSerializer):
+
+    class Meta:
+        model = Commodity
+        exclude = []
+
+
+class OrderSerializer(ModelSerializer):
+    stuId_buyer = UserSerializer(many=False, read_only=True)
+
+
+    class Meta:
+        model = Order
+        fields = ["stuId_buyer"]
+        exclude = []
+
+
+
+
 
 

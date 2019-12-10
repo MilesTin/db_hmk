@@ -50,6 +50,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "用户"
         verbose_name_plural = "用户"
 
+
+
 def user_authenticated(validated_data):
     data = validated_data.copy()
     try:
@@ -64,7 +66,7 @@ class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        exclude = []
+        exclude = ["user_permissions","is_staff", "is_superuser","groups"]
 
     def update(self, instance, validated_data):
         data = user_authenticated(validated_data)
