@@ -3,6 +3,7 @@ from django.contrib.auth.models import BaseUserManager, PermissionsMixin
 from rest_framework.serializers import ModelSerializer
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework.mixins import *
+from django.contrib.auth.hashers import make_password
 
 class UserManager(BaseUserManager):
     def create_user(self, stuId, nickname, password):
@@ -72,6 +73,7 @@ class UserSerializer(ModelSerializer):
 
     def create(self, validated_data):
         data = user_authenticated(validated_data)
+        data['password'] = make_password(data['password'])
         return super(UserSerializer, self).create(data)
 
 
