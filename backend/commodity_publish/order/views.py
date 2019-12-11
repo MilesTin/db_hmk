@@ -13,53 +13,9 @@ from django.contrib.auth import login, logout, authenticate
 from account.views import IsOwner
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
-
+from my_permissions.order import *
 #todo:test api
-class IsOwnerOrReadOnly(IsOwner):
 
-    def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-        else:
-            return super(self.__class__, self).has_permission(request,self)
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        else:
-            return super(self.__class__, self).has_object_permission(request, view, obj)
-
-
-class IsStuAuthenticated(permissions.IsAuthenticated):
-
-    def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view):
-            if request.user.is_stu_authenticated:
-                return True
-        else:
-            return False
-
-    def has_object_permission(self, request, view, obj):
-        if super(self.__class__, self).has_object_permission(request, view):
-            if request.user.is_stu_authenticated:
-                return True
-        else:
-            return False
-
-
-class IsOwnerAndIsStuAuthenticated(IsOwner, IsStuAuthenticated):
-
-    def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view) and super(IsOwner, self).has_permission(request, view):
-            return True
-        return False
-
-
-    def has_object_permission(self, request, view, obj):
-        if super(self.__class__, self).has_object_permission(request, view, obj) and super(IsOwner, self).has_object_permission(request,view, obj):
-            return True
-
-        return False
 
 
 class CommodityViewSets(viewsets.ModelViewSet):
@@ -80,7 +36,6 @@ class CommodityViewSets(viewsets.ModelViewSet):
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
             return [permission() for permission in self.permission_classes]
-
 
 
 class OrderViewSets(viewsets.ModelViewSet):
@@ -113,3 +68,18 @@ class OrderViewSets(viewsets.ModelViewSet):
         self.perform_update(serializer)
 
         return Response({"msg":"agree successful"})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    def dis_agree(self, request, *args, **kwargs):
+        order = self.get_object()
+        order.status = Order.DISAGRRED
+        serializer = self.get_serializer(order, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response({"msg": "disagree successful"})
+
+    @action(detail=False, methods=['get'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    def my_orders(self, request, *args, **kwargs):
+        pass
+

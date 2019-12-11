@@ -30,9 +30,12 @@ class Commodity(models.Model):
 class Order(models.Model):
     ORDERED = 0
     AGREED = 1
+    DISAGRRED = 2
+
     status_choices = (
         (ORDERED, "已经被预定"),
-        (AGREED, "预定已同意")
+        (AGREED, "预定已同意"),
+
     )
 
     orderId = models.BigAutoField(verbose_name="订单id", primary_key=True)
