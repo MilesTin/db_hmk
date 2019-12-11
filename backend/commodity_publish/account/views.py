@@ -10,6 +10,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import *
 from django.contrib.auth import login, logout, authenticate
+from order.models import Order
 
 
 from rest_framework.decorators import action
@@ -35,6 +36,22 @@ class IsOwner(permissions.IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, User):
             return request.user == obj
+        elif isinstance(obj, Order):
+            stuId_buyer = Order.stuId_buyer
+            stuId_seller = Order.stuId_seller
+            try:
+                seller = User.objects.get(pk=stuId_seller)
+                if seller == request.user:
+                    return True
+            except User.DoesNotExist:
+                pass
+            try:
+                buyer = User.objects.get(pk=stuId_buyer)
+                if buyer == request.user:
+                    return True
+            except User.DoesNotExist:
+                pass
+            return False
         else:
             return super(self.__class__, self).has_object_permission(request, view, obj)
 

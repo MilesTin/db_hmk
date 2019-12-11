@@ -39,7 +39,7 @@ class Order(models.Model):
     status = models.IntegerField(verbose_name="状态", choices=status_choices, default=ORDERED)
     appointment_time = models.DateTimeField(verbose_name="预约时间", auto_created=True)
     finished_time = models.DateTimeField(verbose_name="结束时间", null=True)
-    stuId_buyer = models.ForeignKey(User, verbose_name="买家", on_delete=models.CASCADE, related_name="buyer_orders")
+    stuId_buyer = models.ForeignKey(User, verbose_name="买家", on_delete=models.SET_NULL, related_name="buyer_orders", null=True)
     stuId_seller = models.ForeignKey(User, verbose_name="卖家", on_delete=models.CASCADE, related_name="seller_orders")
     comId = models.OneToOneField(Commodity, verbose_name="商品", on_delete=models.CASCADE, related_name="com_order")#一个物品只能有一个订单
     class Meta:
@@ -82,7 +82,6 @@ class CommoditySerializer(ModelSerializer):
     class Meta:
         model = Commodity
         exclude = []
-
 
 #根据订单信息确定状态
 
