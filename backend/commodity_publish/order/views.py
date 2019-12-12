@@ -13,33 +13,23 @@ from django.contrib.auth import login, logout, authenticate
 from account.views import IsOwner
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
-from django_filters.rest_framework import DjangoFilterBackend
-
+from my_permissions.order import *
 #todo:test api
-class IsOwnerOrReadOnly(IsOwner):
 
-    def has_permission(self, request, view):
-        if request.method in SAFE_METHODS:
-            return True
-        else:
-            return super(IsOwner, self).has_permission(request,self)
 
 
 class CommodityViewSets(viewsets.ModelViewSet):
     queryset = Commodity.objects.all()
     serializer_class = CommoditySerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = "__all__"
-    permission_classes = [permissions.IsAdminUser, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAdminUser, IsOwner]
     permission_classes_by_action = {
-        'create': [permissions.IsAuthenticated],
+        'create': [IsStuAuthenticated],
         'list': [permissions.AllowAny],
         'retrieve': [permissions.IsAuthenticatedOrReadOnly],
         'update': permission_classes,
         'destroy': permission_classes,
     }
-
-
+    #todo:list 需要讲当前用户发布的物品移除
     # list, detail权限管理
     def get_permissions(self):
         try:
@@ -47,11 +37,49 @@ class CommodityViewSets(viewsets.ModelViewSet):
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
-    # def list(self, request, *args, **kwargs):
-
-
 
 class OrderViewSets(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAdminUser, IsOwner]
+    permission_classes_by_action = {
+        'create': [IsOwnerAndIsStuAuthenticated],
+        'list': permission_classes,
+        'retrieve': permission_classes,
+        'update': permission_classes,
+        'destroy': permission_classes,
+    }
+
+    # list, detail权限管理
+    def get_permissions(self):
+
+        try:
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            return [permission() for permission in self.permission_classes]
+
+    #传入stuId_buyer
+    @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    def agree(self, request, *args, **kwargs):
+        order = self.get_object()
+        order.status = Order.AGREED
+        serializer = self.get_serializer(order, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response({"msg":"agree successful"})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    def dis_agree(self, request, *args, **kwargs):
+        order = self.get_object()
+        order.status = Order.DISAGRRED
+        serializer = self.get_serializer(order, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response({"msg": "disagree successful"})
+
+    @action(detail=False, methods=['get'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    def my_orders(self, request, *args, **kwargs):
+        pass
 

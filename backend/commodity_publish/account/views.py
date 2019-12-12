@@ -10,33 +10,14 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import *
 from django.contrib.auth import login, logout, authenticate
-
+from order.models import Order
+from my_permissions.user import IsOwner
 
 from rest_framework.decorators import action
 import logging
 logger = logging.getLogger(__name__)
 # Create your views here.
 
-
-class IsOwner(permissions.IsAuthenticated):
-
-
-    def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view):
-            try:
-                user = User.objects.get(pk=view.kwargs['pk'])
-                if request.user == user:
-                    return True
-            except Exception as e:
-                #fixme:something bad may happen
-                pass
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        if isinstance(obj, User):
-            return request.user == obj
-        else:
-            return super(self.__class__, self).has_object_permission(request, view, obj)
 
 #user视图集
 class UserViewSet(viewsets.ModelViewSet):

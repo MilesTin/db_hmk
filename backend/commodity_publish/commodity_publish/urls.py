@@ -23,6 +23,7 @@ from order.views import *
 router = DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
 router.register(r"commodity", CommodityViewSets, base_name="commodity")
+router.register(r"order", OrderViewSets, base_name="order")
 urlpatterns = router.urls
 urlpatterns += [
     re_path("admin/", admin.site.urls)
