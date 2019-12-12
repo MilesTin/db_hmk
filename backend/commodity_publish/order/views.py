@@ -13,6 +13,7 @@ from django.contrib.auth import login, logout, authenticate
 from account.views import IsOwner
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
+from django_filters.rest_framework import DjangoFilterBackend
 
 #todo:test api
 class IsOwnerOrReadOnly(IsOwner):
@@ -23,9 +24,12 @@ class IsOwnerOrReadOnly(IsOwner):
         else:
             return super(IsOwner, self).has_permission(request,self)
 
+
 class CommodityViewSets(viewsets.ModelViewSet):
     queryset = Commodity.objects.all()
     serializer_class = CommoditySerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = "__all__"
     permission_classes = [permissions.IsAdminUser, IsOwnerOrReadOnly]
     permission_classes_by_action = {
         'create': [permissions.IsAuthenticated],
@@ -35,12 +39,15 @@ class CommodityViewSets(viewsets.ModelViewSet):
         'destroy': permission_classes,
     }
 
+
     # list, detail权限管理
     def get_permissions(self):
         try:
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
             return [permission() for permission in self.permission_classes]
+
+    # def list(self, request, *args, **kwargs):
 
 
 

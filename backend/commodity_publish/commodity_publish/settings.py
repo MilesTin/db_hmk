@@ -32,6 +32,7 @@ AUTH_USER_MODEL = "account.User"
 # Application definition
 
 INSTALLED_APPS = [
+    'django_filters',
     'order',
     'corsheaders',
     'rest_framework',
@@ -80,7 +81,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 CORS_ALLOW_HEADERS = (
@@ -169,8 +171,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/commodity_publish/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URL = '/media/'
+MEDIA_URL = '/commodity_publish/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
