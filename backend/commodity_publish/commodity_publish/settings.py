@@ -32,6 +32,7 @@ AUTH_USER_MODEL = "account.User"
 # Application definition
 
 INSTALLED_APPS = [
+    'django_filters',
     'order',
     'corsheaders',
     'rest_framework',
@@ -80,7 +81,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 CORS_ALLOW_HEADERS = (
