@@ -24,12 +24,12 @@ class UserViewSet(viewsets.ModelViewSet):
     safe_fields = ("stuId", "nickname")
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser, IsOwner]
+    permission_classes = [IsOwner, permissions.IsAdminUser]
     permission_classes_by_action = {
         'create': [permissions.AllowAny],
-        'list': permission_classes,
+        'list': [permissions.IsAdminUser],
         'retrieve': [permissions.IsAuthenticatedOrReadOnly],
-        'update': permission_classes,
+        'update': [IsOwner, permissions.IsAdminUser],
         'destroy': permission_classes,
     }
 
@@ -73,8 +73,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def logout(self, request, *args, **kwargs):
         logout(request)
-
-        return Response({"msg":"logout successful"}, status=status.HTTP_200_OK)
+        request.session.flush()
+        return Response({"msg":"logout successful", "user":str(request.user)}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
 
@@ -86,7 +86,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         user = self.get_object()
-        if IsOwner().has_permission(request,self):
+        if IsOwner().has_permission(request,self) or permissions.IsAdminUser().has_permission(request,self):
             return Response(self.get_serializer(user).data)
         else:
             serializer = self.get_serializer(user)
@@ -100,6 +100,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 #fixme:这可能会出错
                 pass
             return Response(safe_data)
+
 
 
 

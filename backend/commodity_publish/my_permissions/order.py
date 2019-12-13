@@ -35,30 +35,30 @@ class IsOwnerOrReadOnly(IsOwner):
 class IsStuAuthenticated(permissions.IsAuthenticated):
 
     def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view):
+        if super(IsStuAuthenticated, self).has_permission(request, view):
             if request.user.is_stu_authenticated:
                 return True
-        else:
-            return False
+
+        return False
 
     def has_object_permission(self, request, view, obj):
-        if super(self.__class__, self).has_object_permission(request, view):
+        if super(IsStuAuthenticated, self).has_object_permission(request, view):
             if request.user.is_stu_authenticated:
                 return True
-        else:
-            return False
+
+        return False
 
 
 class IsOwnerAndIsStuAuthenticated(IsOwner, IsStuAuthenticated):
 
     def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view) and super(IsOwner, self).has_permission(request, view):
+        if super(IsOwnerAndIsStuAuthenticated, self).has_permission(request, view) and super(IsOwner, self).has_permission(request, view):
             return True
         return False
 
 
     def has_object_permission(self, request, view, obj):
-        if super(self.__class__, self).has_object_permission(request, view, obj) and super(IsOwner, self).has_object_permission(request,view, obj):
+        if super(IsOwnerAndIsStuAuthenticated, self).has_object_permission(request, view, obj) and super(IsOwner, self).has_object_permission(request,view, obj):
             return True
 
         return False

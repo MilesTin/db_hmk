@@ -62,7 +62,7 @@ class OrderViewSets(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser, IsOwner]
     permission_classes_by_action = {
         'create': [IsOwnerAndIsStuAuthenticated],
-        'list': permission_classes,
+        'list': [permissions.IsAdminUser],
         'retrieve': permission_classes,
         'update': permission_classes,
         'destroy': permission_classes,

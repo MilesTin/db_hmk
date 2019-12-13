@@ -6,7 +6,7 @@ class IsOwner(permissions.IsAuthenticated):
 
 
     def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view):
+        if super(IsOwner, self).has_permission(request, view):
             try:
                 user = User.objects.get(pk=view.kwargs['pk'])
                 if request.user == user:
@@ -36,4 +36,4 @@ class IsOwner(permissions.IsAuthenticated):
                 pass
             return False
         else:
-            return super(self.__class__, self).has_object_permission(request, view, obj)
+            return super(IsOwner, self).has_object_permission(request, view, obj)
