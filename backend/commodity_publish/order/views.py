@@ -108,7 +108,7 @@ class OrderViewSets(viewsets.ModelViewSet):
         self.request.query_params.appendlist("stuId_seller", user.stuId)
         self.list(self.request, *args, **kwargs)
 
-    @action(detail=False, methods=['get'], permission_classes[IsOwnerAndIsStuAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsOwnerAndIsStuAuthenticated])
     def my_buyed_orders(self, request, *args, **kwargs):
         user = self.request.user
 
