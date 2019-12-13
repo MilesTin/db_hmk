@@ -8,7 +8,7 @@ from account.models import UserSerializer
 class Commodity(models.Model):
     comId = models.BigAutoField(verbose_name="商品id", primary_key=True)
     name = models.CharField(verbose_name="商品名", max_length=100)
-    publish_time = models.DateTimeField(verbose_name="发布时间", auto_created=True)
+    publish_time = models.DateTimeField(verbose_name="发布时间", auto_now_add=True)
     price = models.DecimalField(verbose_name="价格",max_digits=20, decimal_places=10)
     description = models.TextField(verbose_name="描述", max_length=300)
 
@@ -55,8 +55,8 @@ class Order(models.Model):
 def user_directory_path(instance, filename):
     ext = filename.split(".")[-1]
     filename = '{}.{}'.format(uuid.uuid4().hex[:10], ext)
-
-    return os.path.join(instance.user.stuId, "com_pics", filename)
+    # print(os.path.join(str(instance.comId.comId), "pics", filename))
+    return os.path.join(str(instance.comId.comId), "pics", filename)
 
 
 class CommodityPics(models.Model):
@@ -68,7 +68,7 @@ class CommodityPics(models.Model):
         verbose_name = "商品图片"
         verbose_name_plural = "商品图片"
         unique_together = ("comId", "pic")
-
+        ordering = ('comId',)
 
 class CommodityType(models.Model):
     comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE)
@@ -78,7 +78,7 @@ class CommodityType(models.Model):
         verbose_name = "商品类型"
         verbose_name_plural = "商品类型"
         unique_together = ("comId", "type")
-
+        ordering = ("comId",)
 
 class CommoditySerializer(ModelSerializer):
 
@@ -94,6 +94,23 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         exclude = []
+
+
+class CommodityPicsSerializer(ModelSerializer):
+
+    class Meta:
+        model = CommodityPics
+        exclude = []
+
+
+class CommodityTypeSerializer(ModelSerializer):
+
+
+    class Meta:
+        model = CommodityType
+        exclude = []
+
+
 
 
 

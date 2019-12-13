@@ -42,7 +42,7 @@ class IsStuAuthenticated(permissions.IsAuthenticated):
         return False
 
     def has_object_permission(self, request, view, obj):
-        if super(IsStuAuthenticated, self).has_object_permission(request, view):
+        if super(IsStuAuthenticated, self).has_object_permission(request, view, obj):
             if request.user.is_stu_authenticated:
                 return True
 

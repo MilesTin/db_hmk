@@ -27,8 +27,8 @@ class CommodityViewSets(viewsets.ModelViewSet):
         'create': [IsStuAuthenticated],
         'list': [permissions.AllowAny],
         'retrieve': [permissions.IsAuthenticatedOrReadOnly],
-        'update': permission_classes,
-        'destroy': permission_classes,
+        'update': [IsOwner],
+        'destroy': [IsOwner],
     }
     #todo:list 需要讲当前用户发布的物品移除
     # list, detail权限管理
@@ -38,10 +38,20 @@ class CommodityViewSets(viewsets.ModelViewSet):
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
-    @action(methods=['get'], detail=False, permission_classes=[IsOwnerAndIsStuAuthenticated])
-    def my_commodities(self,request, *args, **kwargs):
-        self.request.query_params.appendlist("stuId", request.user.stuId)
-        self.list(request, *args, **kwargs)
+    @action(methods=['get'], detail=False, permission_classes=[IsStuAuthenticated])
+    def mine(self,request, *args, **kwargs):
+        user = request.user
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+
+        queryset = queryset.filter(stuId=user.stuId)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(methods=['get'], detail=False, permission_classes=[IsStuAuthenticated])
     def not_mine(self, request, *args, **kwargs):
@@ -61,7 +71,7 @@ class OrderViewSets(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAdminUser, IsOwner]
     permission_classes_by_action = {
-        'create': [IsOwnerAndIsStuAuthenticated],
+        'create': [IsStuAuthenticated],
         'list': [permissions.IsAdminUser],
         'retrieve': permission_classes,
         'update': permission_classes,
@@ -83,7 +93,6 @@ class OrderViewSets(viewsets.ModelViewSet):
         if order.status != Order.ORDERED:
             return Response({"msg":"错误订单"}, status=status.HTTP_400_BAD_REQUEST)
 
-
         order.status = Order.AGREED
         serializer = self.get_serializer(order, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -92,8 +101,10 @@ class OrderViewSets(viewsets.ModelViewSet):
         return Response({"msg":"agree successful"})
 
     @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
-    def dis_agree(self, request, *args, **kwargs):
+    def disagree(self, request, *args, **kwargs):
         order = self.get_object()
+        if order.status !=Order.ORDERED:
+            return Response({"msg":"错误订单"}, status=status.HTTP_400_BAD_REQUEST)
         order.status = Order.DISAGRRED
         serializer = self.get_serializer(order, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -101,20 +112,123 @@ class OrderViewSets(viewsets.ModelViewSet):
 
         return Response({"msg": "disagree successful"})
 
-    @action(detail=False, methods=['get'], permission_classes=[IsOwnerAndIsStuAuthenticated])
-    def my_ordered_orders(self, request, *args, **kwargs):
+    @action(detail=False, methods=['get'], permission_classes=[IsStuAuthenticated])
+    def my_seller(self, request, *args, **kwargs):
         user = self.request.user
 
-        self.request.query_params.appendlist("stuId_seller", user.stuId)
-        self.list(self.request, *args, **kwargs)
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        queryset = queryset.filter(stuId_seller=user.stuId)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsOwnerAndIsStuAuthenticated])
-    def my_buyed_orders(self, request, *args, **kwargs):
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsStuAuthenticated])
+    def my_buyer(self, request, *args, **kwargs):
         user = self.request.user
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        queryset = queryset.filter(stuId_buyer=user.stuId)
 
-        self.request.query_params.appendlist("stuId_buyer", user.stuId)
-        self.list(self.request, *args, **kwargs)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
+class CommodityPicsViewSets(viewsets.ModelViewSet):
 
+    queryset = CommodityPics.objects.all()
+    serializer_class = CommodityPicsSerializer
+    permission_classes = [IsStuAuthenticated]
+    permission_classes_by_action = {
+        'create': permission_classes,
+        'list': permission_classes,
+        'retrieve': permission_classes,
+        'update': permission_classes,
+        'destroy': permission_classes,
+    }
+
+    # list, detail权限管理
+    def get_permissions(self):
+
+        try:
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            return [permission() for permission in self.permission_classes]
+
+    def create(self, request, *args, **kwargs):
+        user = self.request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        try:
+            if user.commodity_set.filter(comId=data['comId']):
+                super(CommodityPicsViewSets, self).create(request, *args, **kwargs)
+            else:
+                return Response({"msg":"not your commodity"}, status=status.HTTP_403_FORBIDDEN)
+        except KeyError:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def update(self, request, *args, **kwargs):
+        user = self.request.user
+        type = self.get_object()
+        com = type.comId
+
+        if user.commodity_set.filter(comId=com.comId):
+            return super(CommodityPicsViewSets, self).update(request, *args, **kwargs)
+        else:
+            return Response({"msg":"not your commodity"}, status=status.HTTP_403_FORBIDDEN)
+
+
+class CommodityTypesViewSets(viewsets.ModelViewSet):
+    queryset = CommodityType.objects.all()
+    serializer_class = CommodityTypeSerializer
+    permission_classes = [IsStuAuthenticated]
+    permission_classes_by_action = {
+        'create': permission_classes,
+        'list': permission_classes,
+        'retrieve': permission_classes,
+        'update': permission_classes,
+        'destroy': permission_classes,
+    }
+
+    # list, detail权限管理
+    def get_permissions(self):
+
+        try:
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            return [permission() for permission in self.permission_classes]
+
+    def create(self, request, *args, **kwargs):
+        user = self.request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        try:
+            if user.commodity_set.filter(comId=data['comId']):
+                return super(CommodityTypesViewSets, self).create(request, *args, **kwargs)
+            else:
+                return Response({"msg": "not your commodity"}, status=status.HTTP_403_FORBIDDEN)
+        except KeyError:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        user = self.request.user
+        type = self.get_object()
+        comId = type.comId
+        if comId in user.commodity_set:
+            return super(CommodityTypesViewSets, self).update(request, *args, **kwargs)
+        else:
+            return Response({"msg":"not your commodity"}, status=status.HTTP_403_FORBIDDEN)
 

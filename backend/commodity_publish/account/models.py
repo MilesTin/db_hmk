@@ -35,9 +35,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(verbose_name="手机号", max_length=11, null=True, blank=True)
     campus = models.CharField(verbose_name="学院", max_length=20, null=True, blank=True)
     class_num = models.CharField(verbose_name="班级号", max_length=20, null=True, blank=True)
-    is_stu_authenticated = models.BooleanField(verbose_name="是否认证", default=False, editable=False)
-    is_staff = models.BooleanField(default=False, editable=False)
-    is_superuser = models.BooleanField(default=False, editable=False)
+    is_stu_authenticated = models.BooleanField(verbose_name="是否认证", default=False, blank=True)
+    is_staff = models.BooleanField(default=False, blank=True)
+    is_superuser = models.BooleanField(default=False, blank=True)
     USERNAME_FIELD = "stuId"
     REQUIRED_FIELDS = ["nickname", "password"]
 

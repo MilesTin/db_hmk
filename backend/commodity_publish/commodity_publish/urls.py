@@ -16,15 +16,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
+from django.conf.urls.static import static
 from account.views import *
+from django.conf import settings
 from rest_framework.urlpatterns import format_suffix_patterns
 from order.views import *
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet, basename="user")
-router.register(r"commodity", CommodityViewSets, base_name="commodity")
-router.register(r"order", OrderViewSets, base_name="order")
+router.register(r"commodities", CommodityViewSets, base_name="commodity")
+router.register(r"orders", OrderViewSets, base_name="order")
+router.register(r"commodity_pics", CommodityPicsViewSets, base_name="commodity_pics")
+router.register(r"commodity_types", CommodityTypesViewSets, base_name="commodity_types")
+
 urlpatterns = router.urls
 urlpatterns += [
     re_path("admin/", admin.site.urls)
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
