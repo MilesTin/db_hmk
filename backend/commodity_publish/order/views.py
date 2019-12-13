@@ -14,6 +14,7 @@ from account.views import IsOwner
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
 from my_permissions.order import *
+from django.db.models import Q
 #todo:test api
 
 
@@ -37,6 +38,23 @@ class CommodityViewSets(viewsets.ModelViewSet):
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
+    @action(methods=['get'], detail=False, permission_classes=[IsOwnerAndIsStuAuthenticated])
+    def my_commodities(self,request, *args, **kwargs):
+        self.request.query_params.appendlist("stuId", request.user.stuId)
+        self.list(request, *args, **kwargs)
+
+    @action(methods=['get'], detail=False, permission_classes=[IsStuAuthenticated])
+    def not_mine(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        queryset = queryset.filter(~Q(stuId=request.user.stuId))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class OrderViewSets(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -62,6 +80,10 @@ class OrderViewSets(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
     def agree(self, request, *args, **kwargs):
         order = self.get_object()
+        if order.status != Order.ORDERED:
+            return Response({"msg":"错误订单"}, status=status.HTTP_400_BAD_REQUEST)
+
+
         order.status = Order.AGREED
         serializer = self.get_serializer(order, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -80,6 +102,19 @@ class OrderViewSets(viewsets.ModelViewSet):
         return Response({"msg": "disagree successful"})
 
     @action(detail=False, methods=['get'], permission_classes=[IsOwnerAndIsStuAuthenticated])
-    def my_orders(self, request, *args, **kwargs):
-        pass
+    def my_ordered_orders(self, request, *args, **kwargs):
+        user = self.request.user
+
+        self.request.query_params.appendlist("stuId_seller", user.stuId)
+        self.list(self.request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'], permission_classes[IsOwnerAndIsStuAuthenticated])
+    def my_buyed_orders(self, request, *args, **kwargs):
+        user = self.request.user
+
+        self.request.query_params.appendlist("stuId_buyer", user.stuId)
+        self.list(self.request, *args, **kwargs)
+
+
+
 
