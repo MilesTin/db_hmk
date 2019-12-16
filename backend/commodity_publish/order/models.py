@@ -52,6 +52,7 @@ class Order(models.Model):
     def __str__(self):
         return str(self.orderId) +" : " + str(self.status)
 
+
 def user_directory_path(instance, filename):
     ext = filename.split(".")[-1]
     filename = '{}.{}'.format(uuid.uuid4().hex[:10], ext)
@@ -80,13 +81,7 @@ class CommodityType(models.Model):
         unique_together = ("comId", "type")
         ordering = ("comId",)
 
-class CommoditySerializer(ModelSerializer):
 
-    class Meta:
-        model = Commodity
-        exclude = []
-
-#根据订单信息确定状态
 
 
 class OrderSerializer(ModelSerializer):
@@ -94,6 +89,14 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         exclude = []
+
+    def create(self, validated_data):
+        comId = validated_data['comId']
+        orders = Order.objects.filter(comId=comId)
+        if orders:
+            raise  Exception("order已存在")
+        else:
+            return super(OrderSerializer,self).create(**validated_data)
 
 
 class CommodityPicsSerializer(ModelSerializer):
@@ -111,7 +114,14 @@ class CommodityTypeSerializer(ModelSerializer):
         exclude = []
 
 
+class CommoditySerializer(ModelSerializer):
+    pics = CommodityPicsSerializer(many=True, read_only=True)
+    types = CommodityTypeSerializer(many=True, read_only=True)
+    class Meta:
+        model = Commodity
+        exclude = []
 
+#根据订单信息确定状态
 
 
 
