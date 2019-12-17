@@ -168,9 +168,9 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
     serializer_class = CommodityPicsSerializer
     permission_classes = [IsCommodityOwner]
     permission_classes_by_action = {
-        'create': IsStuAuthenticated,
-        'list': permissions.AllowAny,
-        'retrieve': permissions.AllowAny,
+        'create': [IsStuAuthenticated],
+        'list': [permissions.AllowAny],
+        'retrieve': [permissions.AllowAny],
         'update': permission_classes,
         'destroy': permission_classes,
     }
@@ -185,7 +185,7 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
         except KeyError:
             pass
         try:
-            return [permission() for permission in self.permission_classes]
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
@@ -223,8 +223,8 @@ class CommodityTypesViewSets(viewsets.ModelViewSet):
         'create': permission_classes,
         'list': [permissions.AllowAny],
         'retrieve': [permissions.AllowAny],
-        'update': IsCommodityTypesOwner,
-        'destroy': IsCommodityTypesOwner,
+        'update': [IsCommodityTypesOwner],
+        'destroy': [IsCommodityTypesOwner],
     }
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['comId']
