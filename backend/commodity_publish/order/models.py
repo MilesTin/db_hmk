@@ -14,6 +14,7 @@ class Commodity(models.Model):
 
     stuId = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="商品发布者")
 
+
     class Meta:
         verbose_name = "商品"
         verbose_name_plural = "商品"
@@ -52,6 +53,7 @@ class Order(models.Model):
     def __str__(self):
         return str(self.orderId) +" : " + str(self.status)
 
+
 def user_directory_path(instance, filename):
     ext = filename.split(".")[-1]
     filename = '{}.{}'.format(uuid.uuid4().hex[:10], ext)
@@ -60,7 +62,7 @@ def user_directory_path(instance, filename):
 
 
 class CommodityPics(models.Model):
-    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE)
+    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE, related_name="pics")
     pic = models.ImageField(verbose_name="图片", upload_to=user_directory_path)
 
 
@@ -71,7 +73,7 @@ class CommodityPics(models.Model):
         ordering = ('comId',)
 
 class CommodityType(models.Model):
-    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE)
+    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE, related_name="types")
     type = models.CharField(verbose_name="类型", max_length=20)
 
     class Meta:
@@ -80,13 +82,7 @@ class CommodityType(models.Model):
         unique_together = ("comId", "type")
         ordering = ("comId",)
 
-class CommoditySerializer(ModelSerializer):
 
-    class Meta:
-        model = Commodity
-        exclude = []
-
-#根据订单信息确定状态
 
 
 class OrderSerializer(ModelSerializer):
@@ -94,6 +90,18 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         exclude = []
+
+    def create(self, validated_data):
+        comId = validated_data['comId']
+        orders = Order.objects.filter(comId=comId)
+        stuId_seller = validated_data["stuId_seller"]
+
+        if orders:
+            raise  Exception("order已存在")
+        elif not Commodity.objects.filter(stuId=stuId_seller):
+            raise Exception("商品{} 不属于卖家 {}".format(comId, stuId_seller))
+        else:
+            return super(OrderSerializer,self).create(**validated_data)
 
 
 class CommodityPicsSerializer(ModelSerializer):
@@ -111,7 +119,13 @@ class CommodityTypeSerializer(ModelSerializer):
         exclude = []
 
 
-
+class CommoditySerializer(ModelSerializer):
+    pics = CommodityPicsSerializer(many=True, read_only=True,)
+    types = CommodityTypeSerializer(many=True, read_only=True)
+    class Meta:
+        model = Commodity
+        exclude = []
+#根据订单信息确定状态
 
 
 

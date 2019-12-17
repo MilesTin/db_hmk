@@ -30,9 +30,16 @@ class CommodityViewSets(viewsets.ModelViewSet):
         'update': [IsOwner],
         'destroy': [IsOwner],
     }
-    #todo:list 需要讲当前用户发布的物品移除
-    # list, detail权限管理
+
+    # filter fields
+    filterset_fields = ['comId', 'name', 'types']
+
     def get_permissions(self):
+        try:
+            if self.request.user.is_superuser:
+                return [permissions.IsAdminUser()]
+        except KeyError:
+            pass
         try:
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
@@ -77,10 +84,13 @@ class OrderViewSets(viewsets.ModelViewSet):
         'update': permission_classes,
         'destroy': permission_classes,
     }
-
-    # list, detail权限管理
+    #fixme:管理员权限有点问题 管理员需要能够使用所有权限
     def get_permissions(self):
-
+        try:
+            if self.request.user.is_superuser:
+                return [permissions.IsAdminUser()]
+        except KeyError:
+            pass
         try:
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
@@ -152,14 +162,18 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
     permission_classes_by_action = {
         'create': permission_classes,
         'list': permission_classes,
-        'retrieve': permission_classes,
+        'retrieve': [permissions.AllowAny],
         'update': permission_classes,
         'destroy': permission_classes,
     }
 
     # list, detail权限管理
     def get_permissions(self):
-
+        try:
+            if self.request.user.is_superuser:
+                return [permissions.IsAdminUser()]
+        except KeyError:
+            pass
         try:
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
@@ -203,7 +217,11 @@ class CommodityTypesViewSets(viewsets.ModelViewSet):
 
     # list, detail权限管理
     def get_permissions(self):
-
+        try:
+            if self.request.user.is_superuser:
+                return [permissions.IsAdminUser()]
+        except KeyError:
+            pass
         try:
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
