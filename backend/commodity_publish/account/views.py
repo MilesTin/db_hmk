@@ -12,7 +12,7 @@ from rest_framework.decorators import *
 from django.contrib.auth import login, logout, authenticate
 from order.models import Order
 from my_permissions.user import IsOwner
-
+from rest_framework import filters
 from rest_framework.decorators import action
 import logging
 logger = logging.getLogger(__name__)
@@ -32,7 +32,8 @@ class UserViewSet(viewsets.ModelViewSet):
         'update': [IsOwner, permissions.IsAdminUser],
         'destroy': permission_classes,
     }
-
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['stuId', 'nickname']
     #list, detail权限管理
     def get_permissions(self):
         try:

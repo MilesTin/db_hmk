@@ -17,6 +17,8 @@ from rest_framework.permissions import SAFE_METHODS
 from my_permissions.order import *
 from my_permissions.commodity import *
 from django.db.models import Q
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class CommodityViewSets(viewsets.ModelViewSet):
@@ -32,7 +34,10 @@ class CommodityViewSets(viewsets.ModelViewSet):
     }
 
     # filter fields
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['comId', 'name', 'types']
+    search_fields = ["name", "types"]
+    ordering_fields = ["publish_time", "name", "price"]
 
     def get_permissions(self):
         try:
@@ -85,7 +90,9 @@ class OrderViewSets(viewsets.ModelViewSet):
         'update': permission_classes,
         'destroy': permission_classes,
     }
-
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    ordering_fields = ["finished_time", "appointment_time"]
+    filterset_fields = ["status"]
     def get_permissions(self):
         try:
             if self.request.user.is_superuser:
@@ -168,6 +175,8 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
         'destroy': permission_classes,
     }
 
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['comId']
     # list, detail权限管理
     def get_permissions(self):
         try:
@@ -217,7 +226,8 @@ class CommodityTypesViewSets(viewsets.ModelViewSet):
         'update': IsCommodityTypesOwner,
         'destroy': IsCommodityTypesOwner,
     }
-
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['comId']
     # list, detail权限管理
     def get_permissions(self):
         try:
