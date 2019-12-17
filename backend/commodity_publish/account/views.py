@@ -24,12 +24,12 @@ class UserViewSet(viewsets.ModelViewSet):
     safe_fields = ("stuId", "nickname")
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsOwner, permissions.IsAdminUser]
+    permission_classes = [IsOwner]
     permission_classes_by_action = {
         'create': [permissions.AllowAny],
         'list': [permissions.IsAdminUser],
         'retrieve': [permissions.IsAuthenticatedOrReadOnly],
-        'update': [IsOwner, permissions.IsAdminUser],
+        'update': permission_classes,
         'destroy': permission_classes,
     }
     filter_backends = [filters.SearchFilter]
