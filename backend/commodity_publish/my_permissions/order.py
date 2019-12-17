@@ -7,7 +7,7 @@ from rest_framework.permissions import SAFE_METHODS
 class IsOrderSeller(permissions.IsAuthenticated):
 
     def has_permission(self, request, view):
-        if super(self.__class__, self).has_permission(request, view):
+        if super(IsOrderSeller, self).has_permission(request, view):
             try:
                 order = Order.objects.get(pk=view.kwargs['pk'])
                 if order.stuId_seller == request.user.stuId:
@@ -23,13 +23,13 @@ class IsOwnerOrReadOnly(IsOwner):
         if request.method in SAFE_METHODS:
             return True
         else:
-            return super(self.__class__, self).has_permission(request,self)
+            return super(IsOwnerOrReadOnly, self).has_permission(request,self)
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
         else:
-            return super(self.__class__, self).has_object_permission(request, view, obj)
+            return super(IsOwnerOrReadOnly, self).has_object_permission(request, view, obj)
 
 
 class IsStuAuthenticated(permissions.IsAuthenticated):

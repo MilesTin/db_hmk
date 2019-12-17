@@ -36,13 +36,18 @@ class UserViewSet(viewsets.ModelViewSet):
     #list, detail权限管理
     def get_permissions(self):
         try:
+            if self.request.user.is_superuser:
+                return [permissions.IsAdminUser()]
+        except KeyError:
+            pass
+        try:
             return [permission() for permission in self.permission_classes_by_action[self.action]]
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
     # @action(detail=True, methods=['post','in get'])
     # def detail(self, request, *args, **kwargs):
-    #     #FIXME:权限管理有点问题,2017能访问2019等等
+    #
     #     user = self.get_object()
     #     serializer = self.get_serializer(user, data=request.data)
     #     if serializer.is_valid(raise_exception=True):

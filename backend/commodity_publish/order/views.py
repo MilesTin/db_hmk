@@ -10,25 +10,25 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import *
 from django.contrib.auth import login, logout, authenticate
+#todo:test api
 from account.views import IsOwner
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS
 from my_permissions.order import *
+from my_permissions.commodity import *
 from django.db.models import Q
-#todo:test api
-
 
 
 class CommodityViewSets(viewsets.ModelViewSet):
     queryset = Commodity.objects.all()
     serializer_class = CommoditySerializer
-    permission_classes = [permissions.IsAdminUser, IsOwner]
+    permission_classes = [IsCommodityOwner]
     permission_classes_by_action = {
         'create': [IsStuAuthenticated],
         'list': [permissions.AllowAny],
-        'retrieve': [permissions.IsAuthenticatedOrReadOnly],
-        'update': [IsOwner],
-        'destroy': [IsOwner],
+        'retrieve': [permissions.AllowAny],
+        'update': permission_classes,
+        'destroy': permission_classes,
     }
 
     # filter fields
@@ -73,10 +73,11 @@ class CommodityViewSets(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
 class OrderViewSets(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAdminUser, IsOwner]
+    permission_classes = [IsOwner]
     permission_classes_by_action = {
         'create': [IsStuAuthenticated],
         'list': [permissions.IsAdminUser],
@@ -84,7 +85,7 @@ class OrderViewSets(viewsets.ModelViewSet):
         'update': permission_classes,
         'destroy': permission_classes,
     }
-    #fixme:管理员权限有点问题 管理员需要能够使用所有权限
+
     def get_permissions(self):
         try:
             if self.request.user.is_superuser:
@@ -158,11 +159,11 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
 
     queryset = CommodityPics.objects.all()
     serializer_class = CommodityPicsSerializer
-    permission_classes = [IsStuAuthenticated]
+    permission_classes = [IsCommodityOwner]
     permission_classes_by_action = {
-        'create': permission_classes,
-        'list': permission_classes,
-        'retrieve': [permissions.AllowAny],
+        'create': IsStuAuthenticated,
+        'list': permissions.AllowAny,
+        'retrieve': permissions.AllowAny,
         'update': permission_classes,
         'destroy': permission_classes,
     }
@@ -192,6 +193,7 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
         except KeyError:
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
     def update(self, request, *args, **kwargs):
         user = self.request.user
         type = self.get_object()
@@ -207,12 +209,13 @@ class CommodityTypesViewSets(viewsets.ModelViewSet):
     queryset = CommodityType.objects.all()
     serializer_class = CommodityTypeSerializer
     permission_classes = [IsStuAuthenticated]
+
     permission_classes_by_action = {
         'create': permission_classes,
-        'list': permission_classes,
-        'retrieve': permission_classes,
-        'update': permission_classes,
-        'destroy': permission_classes,
+        'list': [permissions.AllowAny],
+        'retrieve': [permissions.AllowAny],
+        'update': IsCommodityTypesOwner,
+        'destroy': IsCommodityTypesOwner,
     }
 
     # list, detail权限管理
@@ -243,8 +246,8 @@ class CommodityTypesViewSets(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         user = self.request.user
-        type = self.get_object()
-        comId = type.comId
+        type_obj = self.get_object()
+        comId = type_obj.comId
         if comId in user.commodity_set:
             return super(CommodityTypesViewSets, self).update(request, *args, **kwargs)
         else:

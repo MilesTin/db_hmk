@@ -79,7 +79,3 @@ class UserSerializer(ModelSerializer):
         return super(UserSerializer, self).create(data)
 
 
-
-
-class UserSerialzierWithCommodityPublished(ModelSerializer):
-    pass
