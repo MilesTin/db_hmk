@@ -185,7 +185,7 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
         except KeyError:
             pass
         try:
-            return [permission() for permission in self.permission_classes_by_action[self.action]]
+            return [permission() for permission in self.permission_classes]
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
