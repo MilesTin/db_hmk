@@ -55,7 +55,10 @@ class CommodityViewSets(viewsets.ModelViewSet):
         user = request.user
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
-
+        #删掉所有已经被预定或者已同意的订单
+        orders_agreed_ordered = Order.objects.filter(Q(status=Order.AGREED) | Q(status=Order.ORDERED))
+        orders_agreed_ordered_comids = orders_agreed_ordered.values_list("comId")
+        queryset = queryset.filter(~Q(comId__in=orders_agreed_ordered_comids))
         queryset = queryset.filter(stuId=user.stuId)
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -69,6 +72,11 @@ class CommodityViewSets(viewsets.ModelViewSet):
     def not_mine(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
+        # 删掉所有已经被预定或者已同意的订单
+        orders_agreed_ordered = Order.objects.filter(Q(status=Order.AGREED) | Q(status=Order.ORDERED))
+        orders_agreed_ordered_comids = orders_agreed_ordered.values_list("comId")
+        queryset = queryset.filter(~Q(comId__in=orders_agreed_ordered_comids))
+        # 效率太低，删掉
         queryset = queryset.filter(~Q(stuId=request.user.stuId))
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -78,6 +86,15 @@ class CommodityViewSets(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def create(self, request, *args, **kwargs):
+        #修改request中stuId
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            #使得本人创建的商品只能是本人的
+            serializer.save(stuId=request.user)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
 
 class OrderViewSets(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -161,7 +178,13 @@ class OrderViewSets(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(stuId_buyer=self.request.user)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
 class CommodityPicsViewSets(viewsets.ModelViewSet):
 
     queryset = CommodityPics.objects.all()

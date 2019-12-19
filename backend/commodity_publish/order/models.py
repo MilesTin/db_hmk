@@ -4,6 +4,11 @@ from account.models import User
 import uuid
 import os
 from account.models import UserSerializer
+from rest_framework import serializers
+from django.core.exceptions import ValidationError
+from django.db.models import Q
+from django.core import validators as django_validators
+from rest_framework import validators
 
 class Commodity(models.Model):
     comId = models.BigAutoField(verbose_name="商品id", primary_key=True)
@@ -25,9 +30,7 @@ class Commodity(models.Model):
         return  self.name +" : " + str(self.comId)
 
 
-
-
-
+#
 class Order(models.Model):
     ORDERED = 0
     AGREED = 1
@@ -41,18 +44,30 @@ class Order(models.Model):
 
     orderId = models.BigAutoField(verbose_name="订单id", primary_key=True)
     status = models.IntegerField(verbose_name="状态", choices=status_choices, default=ORDERED)
-    appointment_time = models.DateTimeField(verbose_name="预约时间", auto_created=True)
+    appointment_time = models.DateTimeField(verbose_name="预约时间", auto_now=True, editable=False)
     finished_time = models.DateTimeField(verbose_name="结束时间", null=True,blank=True)
     stuId_buyer = models.ForeignKey(User, verbose_name="买家", on_delete=models.SET_NULL, related_name="buyer_orders", null=True,blank=True)
     stuId_seller = models.ForeignKey(User, verbose_name="卖家", on_delete=models.CASCADE, related_name="seller_orders")
-    comId = models.OneToOneField(Commodity, verbose_name="商品", on_delete=models.CASCADE, related_name="com_order")#一个物品只能有一个订单
+    comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.SET_NULL, related_name="com_order", null=True)
+    #一个物品可以有多个订单，但只有不同意时有多个订单，即ORDERED， DISAGREEED只能有一个
+    #fixme:在
+
     class Meta:
         verbose_name = "订单"
         verbose_name_plural = "订单"
 
     def __str__(self):
-        return str(self.orderId) +" : " + str(self.status)
+        return str(self.orderId) +" : " + self.status_choices[self.status][1]
 
+    def clean(self):
+        if self.finished_time:
+            if self.finished_time <= self.appointment_time:
+                raise ValidationError("结束时间早与开始时间")
+
+        if self.stuId_seller == self.stuId_buyer:
+            raise ValidationError("卖家买家为同一人")
+
+        return super(Order, self).clean()
 
 def user_directory_path(instance, filename):
     ext = filename.split(".")[-1]
@@ -83,10 +98,8 @@ class CommodityType(models.Model):
         ordering = ("comId",)
 
 
-
-
 class OrderSerializer(ModelSerializer):
-
+    comId = serializers.IntegerField(validators=[validators.UniqueValidator, ])
     class Meta:
         model = Order
         exclude = []
@@ -97,11 +110,26 @@ class OrderSerializer(ModelSerializer):
         stuId_seller = validated_data["stuId_seller"]
 
         if orders:
-            raise  Exception("order已存在")
+            raise Exception("order已存在")
         elif not Commodity.objects.filter(stuId=stuId_seller):
             raise Exception("商品{} 不属于卖家 {}".format(comId, stuId_seller))
         else:
             return super(OrderSerializer,self).create(**validated_data)
+
+    #validate_comId not working
+    @classmethod
+    def validate_comId(self, comId):
+        # 检查comId对应商品是否有状态为AGREEED或ORDERED的订单
+        order_set = Order.objects.filter(Q(comId=comId) & (Q(status=Order.AGREED) | Q(status=Order.ORDERED)))
+        if order_set:
+            raise serializers.ValidationError("此商品已经有有效订单存在")
+        print(order_set)
+        return comId
+
+    def validate(self, attrs):
+        instance = Order(**attrs)
+        instance.clean()
+        return super(OrderSerializer, self).validate(attrs)
 
 
 class CommodityPicsSerializer(ModelSerializer):
@@ -122,6 +150,8 @@ class CommodityTypeSerializer(ModelSerializer):
 class CommoditySerializer(ModelSerializer):
     pics = CommodityPicsSerializer(many=True, read_only=True,)
     types = CommodityTypeSerializer(many=True, read_only=True)
+    price = serializers.DecimalField(max_digits=20, decimal_places=10,min_value=0,max_value=100000, )
+
     class Meta:
         model = Commodity
         exclude = []

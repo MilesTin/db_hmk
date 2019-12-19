@@ -1,9 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, PermissionsMixin
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from django.contrib.auth.models import AbstractBaseUser
 from rest_framework.mixins import *
 from django.contrib.auth.hashers import make_password
+from rest_framework import validators
+from django.core.exceptions import ValidationError
+from django.core import validators as django_validators
 
 class UserManager(BaseUserManager):
     def create_user(self, stuId, nickname, password):
@@ -35,12 +39,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(verbose_name="手机号", max_length=11, null=True, blank=True)
     campus = models.CharField(verbose_name="学院", max_length=20, null=True, blank=True)
     class_num = models.CharField(verbose_name="班级号", max_length=20, null=True, blank=True)
-    is_stu_authenticated = models.BooleanField(verbose_name="是否认证", default=False, blank=True)
+
     is_staff = models.BooleanField(default=False, blank=True)
     is_superuser = models.BooleanField(default=False, blank=True)
     USERNAME_FIELD = "stuId"
     REQUIRED_FIELDS = ["nickname", "password"]
 
+    @property
+    def is_stu_authenticated(self):
+        return self.phone and self.campus and self.class_num
     objects = UserManager()
 
     def __str__(self):
@@ -63,6 +70,14 @@ def user_authenticated(validated_data):
 
 
 class UserSerializer(ModelSerializer):
+    is_stu_authenticated = serializers.BooleanField(read_only=True)
+    #nickname validator 4-20位
+    nickname = serializers.CharField(validators=[django_validators.MinLengthValidator(4), django_validators.MaxLengthValidator(20),
+                                                 ], max_length=20)
+    #限制电话号码为11位
+    phone = serializers.CharField(validators=[django_validators.MinLengthValidator(11), django_validators.MaxLengthValidator(11)])
+    #class_num validator
+    class_num = serializers.CharField(validators=[django_validators.validate_integer], allow_null=True, allow_blank=True)
 
     class Meta:
         model = User
@@ -74,8 +89,8 @@ class UserSerializer(ModelSerializer):
         return super(UserSerializer, self).update(instance, data)
 
     def create(self, validated_data):
-        data = user_authenticated(validated_data)
-        data['password'] = make_password(data['password'])
-        return super(UserSerializer, self).create(data)
+
+        validated_data['password'] = make_password(validated_data['password'])
+        return super(UserSerializer, self).create(validated_data)
 
 
