@@ -73,7 +73,7 @@ class UserSerializer(ModelSerializer):
     is_stu_authenticated = serializers.BooleanField(read_only=True)
     #nickname validator 4-20位
     nickname = serializers.CharField(validators=[django_validators.MinLengthValidator(4), django_validators.MaxLengthValidator(20),
-                                                 ], max_length=20)
+                                                 ], max_length=20, allow_blank=True)
     #限制电话号码为11位
     phone = serializers.CharField(validators=[django_validators.MinLengthValidator(11), django_validators.MaxLengthValidator(11)])
     #class_num validator
