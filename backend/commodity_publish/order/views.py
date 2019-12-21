@@ -219,7 +219,7 @@ class CommodityPicsViewSets(viewsets.ModelViewSet):
         data = serializer.data
         try:
             if user.commodity_set.filter(comId=data['comId']):
-                super(CommodityPicsViewSets, self).create(request, *args, **kwargs)
+                return super(CommodityPicsViewSets, self).create(request, *args, **kwargs)#fix the response bug
             else:
                 return Response({"msg":"not your commodity"}, status=status.HTTP_403_FORBIDDEN)
         except KeyError:
