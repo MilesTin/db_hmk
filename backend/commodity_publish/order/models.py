@@ -99,7 +99,7 @@ class CommodityType(models.Model):
 
 
 class OrderSerializer(ModelSerializer):
-    comId = serializers.IntegerField(validators=[validators.UniqueValidator, ])
+    comId = serializers.IntegerField(validators=[validators.UniqueValidator,])
     class Meta:
         model = Order
         exclude = []
@@ -118,7 +118,7 @@ class OrderSerializer(ModelSerializer):
 
     #validate_comId not working
     @classmethod
-    def validate_comId(self, comId):
+    def validate_comId(cls, comId):
         # 检查comId对应商品是否有状态为AGREEED或ORDERED的订单
         order_set = Order.objects.filter(Q(comId=comId) & (Q(status=Order.AGREED) | Q(status=Order.ORDERED)))
         if order_set:
