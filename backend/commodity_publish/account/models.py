@@ -59,14 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 
-def user_authenticated(validated_data):
-    data = validated_data.copy()
-    try:
-        if data["class_num"] and data["campus"] and data["phone"]:
-            data["is_stu_authenticated"] = True
-    except:
-        data["is_stu_authenticated"] = False
-    return data
+
 
 
 class UserSerializer(ModelSerializer):
@@ -83,10 +76,6 @@ class UserSerializer(ModelSerializer):
         model = User
         exclude = ["user_permissions","is_staff", "is_superuser","groups"]
 
-    def update(self, instance, validated_data):
-        data = user_authenticated(validated_data)
-
-        return super(UserSerializer, self).update(instance, data)
 
     def create(self, validated_data):
 
