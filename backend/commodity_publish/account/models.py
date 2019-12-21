@@ -75,7 +75,7 @@ class UserSerializer(ModelSerializer):
     nickname = serializers.CharField(validators=[django_validators.MinLengthValidator(4), django_validators.MaxLengthValidator(20),
                                                  ], max_length=20, allow_blank=True)
     #限制电话号码为11位
-    phone = serializers.CharField(validators=[django_validators.MinLengthValidator(11), django_validators.MaxLengthValidator(11)])
+    phone = serializers.CharField(validators=[django_validators.MinLengthValidator(11), django_validators.MaxLengthValidator(11)], allow_blank=True)
     #class_num validator
     class_num = serializers.CharField(validators=[django_validators.validate_integer], allow_null=True, allow_blank=True)
 

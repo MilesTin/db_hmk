@@ -82,13 +82,7 @@ class UserViewSet(viewsets.ModelViewSet):
         request.session.flush()
         return Response({"msg":"logout successful", "user":str(request.user)}, status=status.HTTP_200_OK)
 
-    def create(self, request, *args, **kwargs):
 
-        try:
-            response = super(self.__class__, self).create(request, *args, **kwargs)
-            return response
-        except Exception as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, *args, **kwargs):
         user = self.get_object()
