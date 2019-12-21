@@ -55,6 +55,7 @@ class Order(models.Model):
     class Meta:
         verbose_name = "订单"
         verbose_name_plural = "订单"
+        ordering =('orderId', )
 
     def __str__(self):
         return str(self.orderId) +" : " + self.status_choices[self.status][1]
@@ -66,6 +67,9 @@ class Order(models.Model):
 
         if self.stuId_seller == self.stuId_buyer:
             raise ValidationError("卖家买家为同一人")
+
+        if self.comId not in self.stuId_seller.commodity_set.all():
+            raise ValidationError("商品与卖家不对应")
 
         return super(Order, self).clean()
 
@@ -99,37 +103,35 @@ class CommodityType(models.Model):
 
 
 class OrderSerializer(ModelSerializer):
-    comId = serializers.IntegerField(validators=[validators.UniqueValidator,])
+    # comId = serializers.PrimaryKeyRelatedField(validators=[validators.UniqueValidator,])
     class Meta:
         model = Order
         exclude = []
 
-    def create(self, validated_data):
-        comId = validated_data['comId']
-        orders = Order.objects.filter(comId=comId)
-        stuId_seller = validated_data["stuId_seller"]
 
-        if orders:
-            raise Exception("order已存在")
-        elif not Commodity.objects.filter(stuId=stuId_seller):
-            raise Exception("商品{} 不属于卖家 {}".format(comId, stuId_seller))
-        else:
-            return super(OrderSerializer,self).create(**validated_data)
 
-    #validate_comId not working
-    @classmethod
-    def validate_comId(cls, comId):
+    def validate_comId(self, comId):
         # 检查comId对应商品是否有状态为AGREEED或ORDERED的订单
         order_set = Order.objects.filter(Q(comId=comId) & (Q(status=Order.AGREED) | Q(status=Order.ORDERED)))
         if order_set:
             raise serializers.ValidationError("此商品已经有有效订单存在")
-        print(order_set)
+
         return comId
 
+    def validate_stuId_seller(self, stuId_seller):
+
+        request = self.context.get("request", "")
+        try:
+            if request.user == stuId_seller:
+                raise serializers.ValidationError("买家卖家为同一人")
+        except KeyError:
+            raise Exception("没有传入request到order serializer")
+        return stuId_seller
     def validate(self, attrs):
         instance = Order(**attrs)
         instance.clean()
         return super(OrderSerializer, self).validate(attrs)
+
 
 
 class CommodityPicsSerializer(ModelSerializer):
@@ -138,6 +140,12 @@ class CommodityPicsSerializer(ModelSerializer):
         model = CommodityPics
         exclude = []
 
+    def validate_comId(self, comId):
+        request = self.context.get("request")
+        if comId not in request.user.commodity_set.all():
+            raise  serializers.ValidationError("不是你的商品")
+
+        return comId
 
 class CommodityTypeSerializer(ModelSerializer):
 
@@ -146,6 +154,12 @@ class CommodityTypeSerializer(ModelSerializer):
         model = CommodityType
         exclude = []
 
+    def validate_comId(self, comId):
+        request = self.context.get("request")
+        if comId not in request.user.commodity_set.all():
+            raise  serializers.ValidationError("不是你的商品")
+
+        return comId
 
 class CommoditySerializer(ModelSerializer):
     pics = CommodityPicsSerializer(many=True, read_only=True,)
@@ -155,6 +169,8 @@ class CommoditySerializer(ModelSerializer):
     class Meta:
         model = Commodity
         exclude = []
+
+
 #根据订单信息确定状态
 
 

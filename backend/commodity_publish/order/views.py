@@ -99,10 +99,10 @@ class CommodityViewSets(viewsets.ModelViewSet):
 class OrderViewSets(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsOwner]
+    permission_classes = [IsOrderBuyerOrIsOrderSeller]
     permission_classes_by_action = {
         'create': [IsStuAuthenticated],
-        'list': [permissions.IsAdminUser],
+        'list': [permissions.AllowAny],
         'retrieve': permission_classes,
         'update': permission_classes,
         'destroy': permission_classes,
@@ -110,6 +110,11 @@ class OrderViewSets(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     ordering_fields = ["finished_time", "appointment_time"]
     filterset_fields = ["status"]
+
+    #add a empty Response to make post ui available
+    def list(self, request, *args, **kwargs):
+        return Response()
+
     def get_permissions(self):
         try:
             if self.request.user.is_superuser:
@@ -122,30 +127,27 @@ class OrderViewSets(viewsets.ModelViewSet):
             return [permission() for permission in self.permission_classes]
 
     #传入stuId_buyer
-    @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsOrderSeller])
     def agree(self, request, *args, **kwargs):
         order = self.get_object()
         if order.status != Order.ORDERED:
             return Response({"msg":"错误订单"}, status=status.HTTP_400_BAD_REQUEST)
 
         order.status = Order.AGREED
-        serializer = self.get_serializer(order, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        order.save()
+        serializer = self.get_serializer(order)
 
-        return Response({"msg":"agree successful"})
+        return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsOwnerAndIsStuAuthenticated])
+    @action(detail=True, methods=['post'], permission_classes=[IsOrderSeller])
     def disagree(self, request, *args, **kwargs):
         order = self.get_object()
         if order.status !=Order.ORDERED:
             return Response({"msg":"错误订单"}, status=status.HTTP_400_BAD_REQUEST)
         order.status = Order.DISAGRRED
-        serializer = self.get_serializer(order, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response({"msg": "disagree successful"})
+        order.save()
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[IsStuAuthenticated])
     def my_seller(self, request, *args, **kwargs):
@@ -185,11 +187,21 @@ class OrderViewSets(viewsets.ModelViewSet):
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsOrderBuyerOrIsOrderSeller, IsOrderAgreed])
+    def users_info(self, request, *args, **kwargs):
+        order = self.get_object()
+        stuId_buyer = order.stuId_buyer
+        stuId_seller = order.stuId_seller
+        buyer_serializer = UserSerializer(stuId_buyer)
+        seller_serializer = UserSerializer(stuId_seller)
+
+        return Response({"buyer":buyer_serializer.data, "seller":seller_serializer.data})
 class CommodityPicsViewSets(viewsets.ModelViewSet):
 
     queryset = CommodityPics.objects.all()
     serializer_class = CommodityPicsSerializer
-    permission_classes = [IsCommodityOwner]
+    permission_classes = [IsCommodityPicsOwner]
     permission_classes_by_action = {
         'create': [IsStuAuthenticated],
         'list': [permissions.AllowAny],

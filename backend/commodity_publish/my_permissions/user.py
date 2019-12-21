@@ -11,8 +11,7 @@ class IsOwner(permissions.IsAuthenticated):
                 user = User.objects.get(pk=view.kwargs['pk'])
                 if request.user == user:
                     return True
-            except Exception as e:
-                #fixme:something bad may happen
+            except KeyError:
                 pass
         return False
 
@@ -37,3 +36,19 @@ class IsOwner(permissions.IsAuthenticated):
             return False
         else:
             return super(IsOwner, self).has_object_permission(request, view, obj)
+
+class IsStuAuthenticated(permissions.IsAuthenticated):
+
+    def has_permission(self, request, view):
+        if super(IsStuAuthenticated, self).has_permission(request, view):
+            if request.user.is_stu_authenticated:
+                return True
+
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        if super(IsStuAuthenticated, self).has_object_permission(request, view, obj):
+            if request.user.is_stu_authenticated:
+                return True
+
+        return False
