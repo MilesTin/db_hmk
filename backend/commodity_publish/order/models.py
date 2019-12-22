@@ -108,6 +108,8 @@ class CommodityType(models.Model):
 
 class OrderSerializer(ModelSerializer):
     # comId = serializers.PrimaryKeyRelatedField(validators=[validators.UniqueValidator,])
+    appointment_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S", required=False, read_only=True)
+    finished_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S", required=False ,read_only=True)
     class Meta:
         model = Order
         exclude = []
@@ -166,10 +168,11 @@ class CommodityTypeSerializer(ModelSerializer):
         return comId
 
 class CommoditySerializer(ModelSerializer):
+
     pics = CommodityPicsSerializer(many=True, read_only=True,)
     types = CommodityTypeSerializer(many=True, read_only=True)
-    price = serializers.DecimalField(max_digits=20, decimal_places=10,min_value=0,max_value=100000, )
-
+    price = serializers.DecimalField(max_digits=6, decimal_places=2,min_value=0,max_value=100000, )
+    publish_time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S", required=False,read_only=True)
     class Meta:
         model = Commodity
         exclude = []
