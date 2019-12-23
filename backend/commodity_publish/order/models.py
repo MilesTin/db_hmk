@@ -91,6 +91,8 @@ class CommodityPics(models.Model):
         unique_together = ("comId", "pic")
         ordering = ('comId',)
 
+
+#fixme:商品与商品类型之间应该用多对多
 class CommodityType(models.Model):
     comId = models.ForeignKey(Commodity, verbose_name="商品", on_delete=models.CASCADE, related_name="types")
     type = models.CharField(verbose_name="类型", max_length=20)
@@ -101,6 +103,8 @@ class CommodityType(models.Model):
         unique_together = ("comId", "type")
         ordering = ("comId",)
 
+    def __str__(self):
+        return self.type
 
 class OrderSerializer(ModelSerializer):
     # comId = serializers.PrimaryKeyRelatedField(validators=[validators.UniqueValidator,])
