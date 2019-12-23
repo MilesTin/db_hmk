@@ -46,7 +46,8 @@
     methods: {
       ...mapActions([
         'actionCloseMessagePush',
-        'actionClearMsgRecord'
+        'actionClearMsgRecord',
+        
       ]),
       changeAvatar() {
         this.$router.push('/changeAvatar');
@@ -61,10 +62,11 @@
         this.$router.push('/myPublish');
       },
       signOut() {
-        this.actionCloseMessagePush()
+        this.actionCloseMessagePush();
+
         window.localStorage.clear();
         //清空vuex数据
-        window.location.reload()
+        // window.location.reload()
         //清空消息记录
         //this.actionClearMsgRecord()
         //this.$router.push('/');

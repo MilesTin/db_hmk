@@ -9,8 +9,11 @@ export const chat = 'ws://127.0.0.1:8000/ws/chat';
 //export const messagePush = 'wss://www.fanfei.site/push';
 export const messagePush = 'ws://127.0.0.1:8000/push';
 
-//登录
+// 登录
 export const login = `${serverRoot}/users/login/`;
+
+//登出
+export const logout = `${serverRoot}/users/logout/`
 
 //注册
 export const register = `${serverRoot}/users/register/`;
@@ -28,10 +31,10 @@ export const getImgUploadToken = `${serverRoot}/users/getImgUploadToken/`;
 export const publish = `${serverRoot}/commodities/`;
 
 //改变收藏状态
-export const changeCollectState = `${serverRoot}/collect/changeCollectState/`;
+export const changeCollectState = `${serverRoot}/orders/changeCollectState/`;
 
-//获取收藏列表
-export const getCollectionList = `${serverRoot}/collect/getCollectionList/`;
+//获取订单列表
+export const getCollectionList = `${serverRoot}/orders/getCollectionList/`;
 
 //获取搜索列表
 export const search = `${serverRoot}/commodities/?search=`;

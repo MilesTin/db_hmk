@@ -24,6 +24,14 @@ const actions = {
     })
   },
 
+  //登出
+  actionLogout({commit}) {
+    usersApi.logout().then((res)=>{
+      console.log(res)
+    })
+    commit('notLogin')
+  },
+
   //未登录
   actionNotLogin({commit}) {
     commit('notLogin')
@@ -209,7 +217,7 @@ const actions = {
         commit('getMyPublishList', response.list)
       }
     }, (error) => {
-      console.log(`获取收藏列表失败${error}`)
+      console.log(`获取我的发布失败${error}`)
     })
   },
 

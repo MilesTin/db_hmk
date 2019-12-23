@@ -40,6 +40,9 @@ export const usersApi = {
     // })
 
   },
+  logout() {
+
+  },
   register(param) {
     console.log('param', param)
     return axios.post(url.register, param).then((response) => {
@@ -130,7 +133,7 @@ export const productApi = {
     return fetch(url.getMyPublishList, {
       method: "GET",
       credentials: "include",
-      withCredentials: "true"
+      withCredentials: true
     }).then((response) => {
       console.log(response)
       return response;
