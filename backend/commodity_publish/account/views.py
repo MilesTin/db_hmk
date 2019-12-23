@@ -73,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
             del data['password']
             res =  Response(data, status=status.HTTP_200_OK)
-            res.set_cookie(samesite=False,secure=False)
+            # res.set_cookie(samesite=False,secure=False)
             return res
         else:
             return Response({"msg":"wrong password"}, status=status.HTTP_403_FORBIDDEN)
