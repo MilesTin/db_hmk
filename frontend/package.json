@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "ajv": "^6.6.2",
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "element-ui": "^2.13.0",
     "qiniu-js": "^2.5.3",
     "vue": "^2.5.22",
