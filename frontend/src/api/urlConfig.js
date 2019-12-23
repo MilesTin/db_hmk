@@ -1,5 +1,5 @@
-// const serverRoot = 'http://127.0.0.1:8000';
-const serverRoot = 'https://www.milestin.xyz:81';
+const serverRoot = 'http://127.0.0.1:8000';
+// const serverRoot = 'https://www.milestin.xyz:81';
 
 //聊天
 //export const chat = 'wss://www.fanfei.site/ws/chat';

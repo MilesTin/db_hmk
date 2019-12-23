@@ -21,10 +21,16 @@ export const usersApi = {
     console.log(formData)
     return fetch(url.login, {
       method: 'POST',
+      
+      mode: 'cors',
+
       body: formData
-    }).then(res=>res.json()) 
-    .then(res => {
+    }).then(res=>{
       console.log(res);
+      return res.json()
+    }) 
+    .then(res => {
+      console.log(res['seesionid']);
       return res;
     })
     
