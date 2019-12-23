@@ -72,7 +72,9 @@ class UserViewSet(viewsets.ModelViewSet):
             data = serializer.data
 
             del data['password']
-            return Response(data, status=status.HTTP_200_OK)
+            res =  Response(data, status=status.HTTP_200_OK)
+            res.set_cookie(samesite=False,secure=False)
+            return res
         else:
             return Response({"msg":"wrong password"}, status=status.HTTP_403_FORBIDDEN)
 
