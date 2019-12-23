@@ -50,7 +50,7 @@ class CommodityViewSets(viewsets.ModelViewSet):
         except KeyError:
             return [permission() for permission in self.permission_classes]
 
-    @action(methods=['get'], detail=False, permission_classes=[IsStuAuthenticated])
+    @action(methods=['get','options'], detail=False, permission_classes=[IsStuAuthenticated])
     def mine(self,request, *args, **kwargs):
         user = request.user
         queryset = self.get_queryset()
@@ -68,7 +68,7 @@ class CommodityViewSets(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(methods=['get'], detail=False, permission_classes=[IsStuAuthenticated])
+    @action(methods=['get','options'], detail=False, permission_classes=[IsStuAuthenticated])
     def not_mine(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
@@ -127,7 +127,7 @@ class OrderViewSets(viewsets.ModelViewSet):
             return [permission() for permission in self.permission_classes]
 
     #传入stuId_buyer
-    @action(detail=True, methods=['post'], permission_classes=[IsOrderSeller])
+    @action(detail=True, methods=['post','options'], permission_classes=[IsOrderSeller])
     def agree(self, request, *args, **kwargs):
         order = self.get_object()
         if order.status != Order.ORDERED:
@@ -139,7 +139,7 @@ class OrderViewSets(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsOrderSeller])
+    @action(detail=True, methods=['post','options'], permission_classes=[IsOrderSeller])
     def disagree(self, request, *args, **kwargs):
         order = self.get_object()
         if order.status !=Order.ORDERED:
@@ -149,7 +149,7 @@ class OrderViewSets(viewsets.ModelViewSet):
         serializer = self.get_serializer(order)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsStuAuthenticated])
+    @action(detail=False, methods=['get','options'], permission_classes=[IsStuAuthenticated])
     def my_seller(self, request, *args, **kwargs):
         user = self.request.user
 
@@ -165,7 +165,7 @@ class OrderViewSets(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsStuAuthenticated])
+    @action(detail=False, methods=['get','options'], permission_classes=[IsStuAuthenticated])
     def my_buyer(self, request, *args, **kwargs):
         user = self.request.user
         queryset = self.get_queryset()
@@ -188,7 +188,7 @@ class OrderViewSets(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    @action(detail=True, methods=['get'], permission_classes=[IsOrderBuyerOrIsOrderSeller, IsOrderAgreed])
+    @action(detail=True, methods=['get','options'], permission_classes=[IsOrderBuyerOrIsOrderSeller, IsOrderAgreed])
     def users_info(self, request, *args, **kwargs):
         order = self.get_object()
         stuId_buyer = order.stuId_buyer

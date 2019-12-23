@@ -57,7 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
     #     else:
     #         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, methods=['post','options'], permission_classes=[permissions.AllowAny])
     def login(self, request, pk=None):
         stuId = request.data.get("stuId","")
         password = request.data.get("password","")
@@ -76,7 +76,7 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             return Response({"msg":"wrong password"}, status=status.HTTP_403_FORBIDDEN)
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['get','options'], permission_classes=[permissions.IsAuthenticated])
     def logout(self, request, *args, **kwargs):
         logout(request)
         request.session.flush()
